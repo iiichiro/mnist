@@ -1,20 +1,30 @@
 """
-Siwei Used Models
+Models
+- Customized LaNet5
+- SimpleCNN
+- ComplexCNN
+-
 
 """
 
 import tensorflow as tf
 
-from .utils import weight_variable, bias_variable, conv2d, max_pool_2x2, avg_pool_2x2
+from .utils import weight_variable, bias_variable, conv2d, POOLS
 
 
 class LaNet5:
     MODEL_NAME = 'LaNet5'
-    DEFAULT_CNN_KEEP_PROB = 0.5
-    DEFAULT_FC_KEEP_PROB = 0.5
+    DEFAULT_CNN_KEEP_PROB = 1.0
+    DEFAULT_FC_KEEP_PROB = 1.0
+    _POOLS = POOLS
 
     @classmethod
-    def interence(cls, src, cnn_keep_prob, fc_keep_prob):
+    def interence(cls, src, cnn_keep_prob, fc_keep_prob, pool_mode='MAX'):
+        if pool_mode not in cls._POOLS:
+            raise Exception('`pool_mode` must be either {0} or {1}.'.format(*cls._POOLS.keys()))
+        else:
+            pool_layer = cls._POOLS[pool_mode]
+
         with tf.name_scope(cls.MODEL_NAME):
             with tf.name_scope('reshape'):
                 x = tf.reshape(src, [-1, 28, 28, 1])
@@ -25,21 +35,21 @@ class LaNet5:
                 h = conv2d(x, W)
             # プーリング層第1層(6*28*28 -> 6*14*14)
             with tf.name_scope('max_pool1'):
-                h = max_pool_2x2(h)
+                h = pool_layer(h)
             # 畳み込み層第2層(6*14*14 -> 16*14*14)
             with tf.name_scope('conv2'):
                 W = weight_variable((5, 5, 6, 16))
                 h = conv2d(h, W)
             # プーリング層第2層(16*14*14 -> 16*7*7)
             with tf.name_scope('max_pool2'):
-                h = max_pool_2x2(h)
+                h = pool_layer(h)
             # 畳み込み層第3層(16*7*7 -> 120*7*7)
             with tf.name_scope('conv3'):
                 W = weight_variable((5, 5, 16, 120))
                 h = conv2d(h, W)
             # プーリング層第3層(120*7*7 -> 120*4*4)
             with tf.name_scope('max_pool3'):
-                h = max_pool_2x2(h)
+                h = pool_layer(h)
             # flatten(120*4*4 -> 1920)
             with tf.name_scope('flatten'):
                 h = tf.reshape(h, (-1, 120*4*4))
@@ -85,9 +95,15 @@ class SimpleCNN:
     MODEL_NAME = 'SimpleCNN'
     DEFAULT_CNN_KEEP_PROB = 0.25
     DEFAULT_FC_KEEP_PROB = 0.25
+    _POOLS = POOLS
 
     @classmethod
-    def interence(cls, src, cnn_keep_prob, fc_keep_prob):
+    def interence(cls, src, cnn_keep_prob, fc_keep_prob, pool_mode='AVG'):
+        if pool_mode not in cls._POOLS:
+            raise Exception('`pool_mode` must be either {0} or {1}.'.format(*cls._POOLS.keys()))
+        else:
+            pool_layer = cls._POOLS[pool_mode]
+
         with tf.name_scope(cls.MODEL_NAME):
             with tf.name_scope('reshape'):
                 x = tf.reshape(src, [-1, 28, 28, 1])
@@ -98,21 +114,21 @@ class SimpleCNN:
                 h = conv2d(x, W)
             # プーリング層第1層(32*28*28 -> 32*14*14)
             with tf.name_scope('avg_pool1'):
-                h = avg_pool_2x2(h)
+                h = pool_layer(h)
             # 畳み込み層第2層(32*14*14 -> 32*14*14)
             with tf.name_scope('conv2'):
                 W = weight_variable((3, 3, 32, 32))
                 h = conv2d(h, W)
             # プーリング層第2層(32*14*14 -> 32*7*7)
             with tf.name_scope('avg_pool2'):
-                h = avg_pool_2x2(h)
+                h = pool_layer(h)
             # 畳み込み層第3層(32*7*7 -> 64*7*7)
             with tf.name_scope('conv3'):
                 W = weight_variable((3, 3, 32, 64))
                 h = conv2d(h, W)
             # プーリング層第3層(64*7*7 -> 64*4*4)
             with tf.name_scope('avg_pool3'):
-                h = avg_pool_2x2(h)
+                h = pool_layer(h)
             # ドロップアウト層第1層
             with tf.name_scope('dropout1'):
                 h = tf.nn.dropout(h, cnn_keep_prob)
@@ -164,9 +180,15 @@ class ComplexCNN:
     MODEL_NAME = 'ComplexCNN'
     DEFAULT_CNN_KEEP_PROB = 0.25
     DEFAULT_FC_KEEP_PROB = 0.5
+    _POOLS = POOLS
 
     @classmethod
-    def interence(cls, src, cnn_keep_prob, fc_keep_prob):
+    def interence(cls, src, cnn_keep_prob, fc_keep_prob, pool_mode='MAX'):
+        if pool_mode not in cls._POOLS:
+            raise Exception('`pool_mode` must be either {0} or {1}.'.format(*cls._POOLS.keys()))
+        else:
+            pool_layer = cls._POOLS[pool_mode]
+
         with tf.name_scope(cls.MODEL_NAME):
             with tf.name_scope('reshape'):
                 x = tf.reshape(src, [-1, 28, 28, 1])
@@ -183,7 +205,7 @@ class ComplexCNN:
                 h = tf.nn.relu(conv2d(h, W) + b)
             # プーリング層第1層(32*28*28 -> 32*14*14)
             with tf.name_scope('max_pool1'):
-                h = max_pool_2x2(h)
+                h = pool_layer(h)
             # 畳み込み層第3層(32*14*14 -> 32*14*14)
             with tf.name_scope('conv3'):
                 W = weight_variable((3, 3, 32, 32))
@@ -196,7 +218,7 @@ class ComplexCNN:
                 h = tf.nn.relu(conv2d(h, W) + b)
             # プーリング層第2層(32*14*14 -> 32*7*7)
             with tf.name_scope('max_pool2'):
-                h = max_pool_2x2(h)
+                h = pool_layer(h)
             # 畳み込み層第5層(32*7*7 -> 64*7*7)
             with tf.name_scope('conv5'):
                 W = weight_variable((3, 3, 32, 64))
@@ -209,7 +231,7 @@ class ComplexCNN:
                 h = tf.nn.relu(conv2d(h, W) + b)
             # プーリング層第3層(64*7*7 -> 64*4*4)
             with tf.name_scope('max_pool3'):
-                h = max_pool_2x2(h)
+                h = pool_layer(h)
             # ドロップアウト層第1層
             with tf.name_scope('dropout1'):
                 h = tf.nn.dropout(h, cnn_keep_prob)

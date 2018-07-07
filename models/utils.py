@@ -26,3 +26,6 @@ def max_pool_2x2(x, padding='SAME'):
 # プーリング層
 def avg_pool_2x2(x, padding='SAME'):
     return tf.nn.avg_pool(x, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding=padding)
+
+
+POOLS = {'MAX': max_pool_2x2, 'AVG': avg_pool_2x2}
