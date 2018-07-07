@@ -3,7 +3,7 @@ modelsパッケージ
 
 """
 from .tf_model import TensorflowTutorialModel
-from .siwei_models import LaNet5, SimpleCNN, ComplexCNN
+from .models import LaNet5, SimpleCNN, ComplexCNN
 
 DEFINED_MODELS = {
     TensorflowTutorialModel.MODEL_NAME: TensorflowTutorialModel,  # TensorFlowチュートリアルモデル
